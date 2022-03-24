@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.bootcdn.net/ajax/libs/spark-md5/3.0.2/spark-md5.js" ></script>
+</head>
+<meta charset="utf-8">
+<title>Javascrpit文件md5计算演示代码</title>
+</head>
+<body>
+    <h1>Javascrpit文件md5计算演示代码</h1>
+    <div>
+        <label for="file">Choose file to upload</label>
+        <!-- multiple 当指定布尔类型属性 multiple (en-US), 文件 input 允许用户选择多个文件。 -->
+        <input  type="file" id="file" name="file" accept="image/png, image/jpeg" multiple onchange="handleFiles(this.files)">
+    </div>
+    <div>
+        <ul></ul>
+    </div>
+</body>
+</html>
+
+<script>
+    async function handleFiles(files)  {
+        console.log(files);
+        const res = await getFilesMd5(files);
+        console.log(res);
+    }
+
+    async function getFilesMd5(files) {
+        try{
+            const getFileMd5FuncArray = [];
+            for(let i = 0; i< files.length; i++){
+                getFileMd5FuncArray.push(getFileMd5(files[i]));
+            }
+            const data = await Promise.all(getFileMd5FuncArray);
+            return data.reduce((item1, item2) => Object.assign(item1, item2))
+        }   catch(err) {
+            console.error(err);
+        }
+    }
+
+    async function getFileMd5(fileObject) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const spark = new SparkMD5.ArrayBuffer();
+                const fileReader = new FileReader();
+                // 异步操作，读完后的结果
+                fileReader.onload = e => {
+                    spark.append(e.target.result);
+                    const fileMd5 = spark.end();
+                    return resolve({ [fileObject.name]: fileMd5 });
+                };
+                fileReader.readAsArrayBuffer(fileObject);
+            } catch (err) {
+                return reject(err);
+            }
+        });
+    }
+</script>
